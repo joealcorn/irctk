@@ -161,7 +161,7 @@ class TcpClient(object):
         while True:
             line = self.out.get(True).splitlines()
             if line:
-                line = line[0]
+                line = line[0].encode('utf8')
                 self.out_buffer += line + '\r\n'
                 self.logger.info(line)
 
