@@ -147,7 +147,7 @@ class TcpClient(object):
                 else:
                     self.close()
 
-            self.inp_buffer += data
+            self.inp_buffer += unicode(data, 'utf8')
 
             while '\r\n' in self.inp_buffer and not self.shutdown:
 
