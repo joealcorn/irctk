@@ -284,13 +284,6 @@ class IrcWrapper(object):
                              'raw': self.line,
                              'stale': False}
 
-                    if 'error :closing link:' in self.line.lower():
-                        error = 'Connection lost, reconnecting.'
-                        self.connection.logger.error(error)
-                        self.connection.reconnect(reconnect_wait)
-                        self.connection.inp.put('RECONNECT :server\r\n')
-                        reconnect_wait *= reconnect_wait
-
                     if self.command == 'PING':
                         self._send_line('PONG ' + ''.join(self.args))
                     elif self.command == '001' and self.channels:
@@ -301,6 +294,12 @@ class IrcWrapper(object):
                         self._send_line('NICK ' + self.nick)
                     elif self.command == 'RECONNECT':
                         self._register()
+                    elif self.command == 'ERROR':
+                        error = 'Connection lost, reconnecting.'
+                        self.connection.logger.error(error)
+                        self.connection.reconnect(reconnect_wait)
+                        self.connection.inp.put('RECONNECT :server\r\n')
+                        reconnect_wait *= reconnect_wait
 
     def _parse_line(self, line):
         '''This internal method takes a line as recieved from the IRC server
