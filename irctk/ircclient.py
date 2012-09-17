@@ -284,7 +284,7 @@ class IrcWrapper(object):
                              'raw': self.line,
                              'stale': False}
 
-                    if 'ERROR :Closing link:' in self.line:
+                    if 'error :closing link:' in self.line.lower():
                         error = 'Connection lost, reconnecting.'
                         self.connection.logger.error(error)
                         self.connection.reconnect(reconnect_wait)
