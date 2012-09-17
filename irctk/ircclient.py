@@ -147,7 +147,7 @@ class TcpClient(object):
                 else:
                     self.close()
 
-            self.inp_buffer += unicode(data, 'utf8')
+            self.inp_buffer += data.decode('utf-8', 'replace')
 
             while '\r\n' in self.inp_buffer and not self.shutdown:
 
@@ -161,7 +161,7 @@ class TcpClient(object):
         while True:
             line = self.out.get(True).splitlines()
             if line:
-                line = line[0].encode('utf8')
+                line = line[0].encode('utf-8', 'replace')
                 self.out_buffer += line + '\r\n'
                 self.logger.info(line)
 
