@@ -218,6 +218,14 @@ class IrcWrapper(object):
         lines += ['NICK ' + self.nick, self.user]
         self._send_lines(lines)
 
+    def _pop(self):
+        line, self.out_buffer = self.out_buffer.split('\r\n', 1)
+        return line
+    
+    def _first(self):
+        line = self.out_buffer.split('\r\n', 1)[0]
+        return line
+
     def _send(self, wait=0.1, wait_time=1.0, wait_base=1.0, byte_size=8192):
         '''This internal method reads off of `self.out_buffer`, sending the
         contents to the connection object's output queue.
@@ -229,19 +237,26 @@ class IrcWrapper(object):
         TODO: rate limiter does not yet work. Perhaps a proper implementation
         of the leaky bucket?
         '''
-
+        
+        self.stack = []
+        
         while True:
             time.sleep(wait)
             while '\r\n' in self.out_buffer and not self.connection.shutdown:
-                line, self.out_buffer = self.out_buffer.split('\r\n', 1)
-                if len(self.out_buffer) >= byte_size:
-                    wait_time *= wait_time
-                    time.sleep(wait_time)
-                elif wait_time > wait_base:
-                    wait_time /= wait_time
-                elif wait_time < wait_base:
-                    wait_time = wait_base
-                self.connection.out.put(line)
+                # pinched from phenny
+                if self.stack: 
+                    elapsed = time.time() - self.stack[-1][0]
+                    if elapsed < 3: 
+                        penalty = float(max(0, len(self._first()) - 50)) / 70
+                        wait = 0.8 + penalty
+                        if elapsed < wait: 
+                            time.sleep(wait - elapsed)
+                
+                self.connection.out.put(self._first())
+                self.stack.append((time.time(), self._first()))
+                self.stack[:] = self.stack[-10:]
+                
+                self._pop()
 
     def _recv(self, reconnect_wait=5.0):
         '''This internal method pulls data from the connection's input queue.
